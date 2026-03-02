@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Canvas Jurídico - Responsabilidad Civil y Seguros</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel-soft: #1f2937;
+      --accent: #22c55e;
+      --accent-2: #38bdf8;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #334155;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(6px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    h1 { margin: 0; font-size: 1.3rem; }
+    p { margin: 0; color: var(--muted); }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1fr;
+    }
+
+    .panel {
+      background: rgba(17, 24, 39, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .upload-area {
+      display: grid;
+      gap: 12px;
+      align-items: center;
+      justify-items: center;
+      border: 2px dashed var(--accent-2);
+      border-radius: 12px;
+      padding: 24px;
+      background: rgba(56, 189, 248, 0.08);
+      text-align: center;
+    }
+
+    .upload-area strong {
+      font-size: 1.1rem;
+      color: white;
+    }
+
+    .status {
+      font-size: 0.95rem;
+      color: var(--warn);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    button {
+      background: var(--panel-soft);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button.active { border-color: var(--accent); color: #fff; background: #14532d; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #0b3a24;
+      border: 1px solid #166534;
+      color: #86efac;
+      font-size: 0.85rem;
+      margin-left: 8px;
+    }
+
+    .hidden { display: none; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th { color: #cbd5e1; }
+    td[contenteditable="true"] {
+      background: rgba(51, 65, 85, 0.2);
+      border-radius: 6px;
+      outline: none;
+    }
+
+    .alert {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid #7f1d1d;
+      color: #fecaca;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 6px 0;
+    }
+
+    .ok {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid #14532d;
+      color: #bbf7d0;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    canvas {
+      width: 100%;
+      max-width: 420px;
+      height: 140px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #020617;
+      display: block;
+      margin: 8px auto 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Tablero de Control Jurídico (Canvas) - Accidentes de Tránsito</h1>
+    <p>Rol experto: <strong>Abogado Senior en Responsabilidad Civil Extracontractual y Derecho de Seguros</strong></p>
+  </header>
+
+  <main class="container">
+    <section class="panel upload-area">
+      <strong>Por favor, cargue el archivo PDF de la demanda aquí para iniciar el análisis.</strong>
+      <input id="pdfInput" type="file" accept="application/pdf" />
+      <p id="pdfStatus" class="status">Estado: pendiente de carga obligatoria.</p>
+      <canvas id="caseCanvas" width="420" height="140" aria-label="Lienzo de estado del caso"></canvas>
+    </section>
+
+    <section class="panel">
+      <div class="controls">
+        <div class="tabs">
+          <button id="tabResumen" disabled class="active">Resumen y Hechos</button>
+          <button id="tabDemandante" disabled>Visión Demandante</button>
+          <button id="tabDemandado" disabled>Visión Demandado</button>
+          <button id="tabPruebas" disabled>Auditoría de Pruebas</button>
+          <button id="tabRiesgo" disabled>Riesgo y Cuantía</button>
+        </div>
+        <span id="processedTag" class="badge hidden">Procesamiento activo</span>
+      </div>
+    </section>
+
+    <section id="panelResumen" class="panel">
+      <h2>1) Resumen Ejecutivo y Cuadro de Hechos</h2>
+      <div class="grid-2">
+        <div>
+          <h3>Cronología del siniestro</h3>
+          <ol>
+            <li><strong>T0:</strong> Ocurrencia del accidente y activación de autoridades.</li>
+            <li><strong>T1:</strong> Levantamiento de IPAT, fotos y evidencias en vía.</li>
+            <li><strong>T2:</strong> Atención médica inicial y consolidación del diagnóstico.</li>
+            <li><strong>T3:</strong> Reclamación prejudicial / radicación de demanda.</li>
+          </ol>
+        </div>
+        <div>
+          <h3>Identificación de sujetos</h3>
+          <ul>
+            <li><strong>Conductor A</strong> (presunto agente causante)</li>
+            <li><strong>Conductor B</strong> (contraparte / posible víctima concurrente)</li>
+            <li><strong>Propietario del vehículo</strong></li>
+            <li><strong>Aseguradora</strong> (RC contractual o extracontractual)</li>
+            <li><strong>Víctimas directas e indirectas</strong></li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Tabla dinámica comparativa de hechos</h3>
+      <p>Edite celdas para adaptar el caso concreto.</p>
+      <table id="hechosTable">
+        <thead>
+          <tr>
+            <th>Hecho</th>
+            <th>Versión Demandante</th>
+            <th>Versión Demandado</th>
+            <th>Soporte probatorio</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Prioridad vial y maniobra previa al impacto</td>
+            <td contenteditable="true">Conductor A invadió carril y omitió señal de pare.</td>
+            <td contenteditable="true">Conductor B excedió velocidad y redujo margen de reacción.</td>
+            <td contenteditable="true">IPAT + video cámara cercana</td>
+          </tr>
+          <tr>
+            <td>Nexo causal daño-lesión</td>
+            <td contenteditable="true">Lesiones compatibles con cinemática del choque.</td>
+            <td contenteditable="true">Existe patología preexistente no atribuible íntegramente al siniestro.</td>
+            <td contenteditable="true">Historia clínica + pericia biomecánica</td>
+          </tr>
+        </tbody>
+      </table>
+      <button id="scanAlerts" disabled>Detectar Alertas Jurídicas</button>
+      <div id="alertasBox"></div>
+    </section>
+
+    <section id="panelDemandante" class="panel hidden">
+      <h2>2) Análisis desde el Rol del <strong>DEMANDANTE</strong> (Atacante)</h2>
+      <ul>
+        <li><strong>Teoría del caso:</strong> responsabilidad por <strong>actividad peligrosa</strong> y guarda de cosa riesgosa (vehículo automotor).</li>
+        <li><strong>Acreditación del daño:</strong> desagregar <strong>daño emergente</strong>, <strong>lucro cesante</strong>, <strong>daño moral</strong> y <strong>daño a la vida de relación</strong>.</li>
+        <li><strong>Fortalezas:</strong> prueba técnica objetiva (IPAT/peritaje), trazabilidad médica y testigos presenciales consistentes.</li>
+        <li><strong>Debilidades:</strong> brechas temporales en atención, falta de soporte contable del lucro cesante o dudas sobre causalidad exclusiva.</li>
+      </ul>
+    </section>
+
+    <section id="panelDemandado" class="panel hidden">
+      <h2>3) Análisis desde el Rol del <strong>DEMANDADO</strong> (Defensa)</h2>
+      <ul>
+        <li><strong>Eximentes de responsabilidad:</strong> culpa exclusiva de la víctima, hecho de un tercero y fuerza mayor/caso fortuito.</li>
+        <li><strong>Estrategia de contestación:</strong> negar hechos de causalidad no probada, precisar circunstancias de modo/tiempo/lugar y depurar pretensiones infladas.</li>
+        <li><strong>Excepciones de fondo sugeridas:</strong> inexistencia parcial de la obligación, falta de legitimación en la causa, compensación de culpas y prescripción (si aplica).</li>
+      </ul>
+    </section>
+
+    <section id="panelPruebas" class="panel hidden">
+      <h2>4) Auditoría de Pruebas</h2>
+      <table>
+        <thead>
+          <tr><th>Elemento</th><th>Valor técnico</th><th>Riesgo</th><th>Acción recomendada</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>IPAT</td><td>Alta trazabilidad objetiva</td><td>Errores de levantamiento</td><td>Solicitar ratificación del agente y croquis ampliado</td></tr>
+          <tr><td>Testimonios</td><td>Contexto de percepción</td><td>Sesgo/memoria</td><td>Contrainterrogatorio sobre puntos de observación</td></tr>
+          <tr><td>Peritaje técnico</td><td>Reconstrucción de dinámica</td><td>Metodología cuestionable</td><td>Perito de parte y revisión de supuestos</td></tr>
+          <tr><td>Registro fílmico</td><td>Alta contundencia</td><td>Autenticidad/cadena de custodia</td><td>Prueba de integridad y metadatos</td></tr>
+        </tbody>
+      </table>
+      <p class="ok">Sugerencias adicionales: inspección judicial del sitio, informe meteorológico oficial, y pericia médica ocupacional para cuantificar incapacidad real.</p>
+    </section>
+
+    <section id="panelRiesgo" class="panel hidden">
+      <h2>5) Estimación de Riesgos y Cuantía</h2>
+      <div class="grid-2">
+        <div>
+          <h3>Razonabilidad económica</h3>
+          <ul>
+            <li>Contrastar pretensión con baremos jurisprudenciales y soportes contables.</li>
+            <li>Verificar duplicidad entre rubros indemnizables.</li>
+            <li>Aplicar descuento por concurrencia de culpas cuando proceda.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Probabilidad de éxito</h3>
+          <p><strong id="probabilidad">Media</strong> (ajustable según completitud de pruebas y coherencia causal).</p>
+          <input id="riskRange" type="range" min="1" max="3" value="2" />
+          <p id="riskLabel">Nivel actual: Medio</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const pdfInput = document.getElementById('pdfInput');
+    const pdfStatus = document.getElementById('pdfStatus');
+    const processedTag = document.getElementById('processedTag');
+    const scanAlerts = document.getElementById('scanAlerts');
+    const alertasBox = document.getElementById('alertasBox');
+    const tabs = {
+      tabResumen: document.getElementById('panelResumen'),
+      tabDemandante: document.getElementById('panelDemandante'),
+      tabDemandado: document.getElementById('panelDemandado'),
+      tabPruebas: document.getElementById('panelPruebas'),
+      tabRiesgo: document.getElementById('panelRiesgo')
+    };
+
+    const tabButtons = Object.keys(tabs).map(id => document.getElementById(id));
+
+    function switchTab(activeId) {
+      Object.entries(tabs).forEach(([buttonId, panel]) => {
+        const isActive = buttonId === activeId;
+        panel.classList.toggle('hidden', !isActive);
+        document.getElementById(buttonId).classList.toggle('active', isActive);
+      });
+    }
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.id));
+    });
+
+    pdfInput.addEventListener('change', () => {
+      const file = pdfInput.files[0];
+      if (!file || file.type !== 'application/pdf') {
+        pdfStatus.textContent = 'Debe cargar un archivo PDF válido para iniciar.';
+        pdfStatus.style.color = '#fca5a5';
+        return;
+      }
+
+      pdfStatus.textContent = `PDF cargado: ${file.name} (${Math.round(file.size / 1024)} KB). Procesamiento habilitado.`;
+      pdfStatus.style.color = '#86efac';
+      tabButtons.forEach(b => b.disabled = false);
+      scanAlerts.disabled = false;
+      processedTag.classList.remove('hidden');
+      drawCanvas(true);
+    });
+
+    scanAlerts.addEventListener('click', () => {
+      alertasBox.innerHTML = '';
+      const rows = [...document.querySelectorAll('#hechosTable tbody tr')];
+      const inconsistencias = [];
+
+      rows.forEach((row, idx) => {
+        const demandante = row.children[1].innerText.toLowerCase();
+        const demandado = row.children[2].innerText.toLowerCase();
+        if (demandante.includes('omitió señal de pare') && demandado.includes('excedió velocidad')) {
+          inconsistencias.push(`Fila ${idx + 1}: existe hipótesis de concurrencia de culpas que debe cuantificarse.`);
+        }
+        if (demandado.includes('preexistente') && !row.children[3].innerText.toLowerCase().includes('pericia')) {
+          inconsistencias.push(`Fila ${idx + 1}: alegación de preexistencia sin pericia robusta de soporte.`);
+        }
+      });
+
+      if (!inconsistencias.length) {
+        alertasBox.innerHTML = '<div class="ok">Sin alertas críticas automáticas. Revise igualmente coherencia probatoria integral.</div>';
+        return;
+      }
+
+      inconsistencias.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'alert';
+        div.innerHTML = `<strong>Alerta Jurídica:</strong> ${msg}`;
+        alertasBox.appendChild(div);
+      });
+    });
+
+    const riskRange = document.getElementById('riskRange');
+    const riskLabel = document.getElementById('riskLabel');
+    const probabilidad = document.getElementById('probabilidad');
+
+    riskRange.addEventListener('input', () => {
+      const map = { 1: ['Baja', 'Bajo'], 2: ['Media', 'Medio'], 3: ['Alta', 'Alto'] };
+      const [p, n] = map[riskRange.value];
+      probabilidad.textContent = p;
+      riskLabel.textContent = `Nivel actual: ${n}`;
+    });
+
+    function drawCanvas(loaded = false) {
+      const canvas = document.getElementById('caseCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#0b1220';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = loaded ? '#22c55e' : '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
+      ctx.fillStyle = '#e5e7eb';
+      ctx.font = '16px sans-serif';
+      ctx.fillText('Lienzo de estado del caso', 20, 40);
+      ctx.fillStyle = loaded ? '#86efac' : '#fcd34d';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText(loaded ? 'PDF CARGADO ✔' : 'CARGA OBLIGATORIA PENDIENTE', 20, 85);
+    }
+
+    drawCanvas(false);
+  </script>
+</body>
+</html>
