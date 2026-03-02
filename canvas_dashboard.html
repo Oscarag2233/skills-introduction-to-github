@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Canvas Jurídico - Análisis de Caso</title>
+  <style>
+    :root { --bg:#0b1020; --panel:#121a2b; --line:#26324a; --text:#e9edf5; --muted:#9aa8c2; --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; }
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#070b16,#111a2e);color:var(--text);font-family:Arial,sans-serif}
+    header{padding:16px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#0b1020f0;backdrop-filter:blur(5px)}
+    h1,h2,h3{margin:.2rem 0 .6rem} p{margin:.25rem 0;color:var(--muted)}
+    .wrap{max-width:1150px;margin:0 auto;padding:18px;display:grid;gap:14px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+    .hero{border:2px dashed #3b82f6;background:#0d213d66;text-align:center;padding:20px}
+    .hero strong{font-size:1.05rem}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .tabs button{padding:9px 12px;border-radius:9px;border:1px solid var(--line);background:#1a2438;color:var(--text);cursor:pointer;font-weight:700}
+    .tabs button.active{border-color:#22c55e;background:#143a26}
+    .tabs button:disabled{opacity:.45;cursor:not-allowed}
+    .badge{display:none;padding:4px 9px;border-radius:999px;border:1px solid #0f5132;background:#0f2f1f;color:#86efac;font-size:.85rem}
+    .badge.on{display:inline-block}
+    .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:10px}
+    table{width:100%;border-collapse:collapse;font-size:.94rem} th,td{border-bottom:1px solid var(--line);padding:9px;vertical-align:top;text-align:left}
+    td[contenteditable="true"]{background:#202b4380;border-radius:6px;outline:none}
+    .hidden{display:none}
+    .alert{padding:10px;border-radius:8px;margin-top:7px}
+    .alert.bad{background:#3b111c;border:1px solid #7f1d1d;color:#fecaca}
+    .alert.ok{background:#0f2f1f;border:1px solid #14532d;color:#bbf7d0}
+    input[type="file"]{max-width:100%}
+    canvas{display:block;margin:10px auto 0;border:1px solid var(--line);border-radius:10px;width:100%;max-width:460px;height:130px;background:#070b16}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Canvas Jurídico Interactivo - Tránsito y Seguros</h1>
+  <p><strong>Rol activo:</strong> Abogado Senior en <strong>Responsabilidad Civil Extracontractual</strong> y <strong>Derecho de Seguros</strong>.</p>
+</header>
+
+<main class="wrap">
+  <section class="card hero" id="uploadZone">
+    <strong>Por favor, cargue el archivo PDF de la demanda aquí para iniciar el análisis.</strong>
+    <p>La navegación del tablero permanece bloqueada hasta validar el PDF.</p>
+    <input id="pdfInput" type="file" accept=".pdf,application/pdf" />
+    <div class="row" style="justify-content:center;margin-top:8px">
+      <button id="startBtn" disabled>Iniciar procesamiento</button>
+      <span id="procTag" class="badge">Procesamiento activo</span>
+    </div>
+    <p id="pdfStatus" style="color:var(--warn)">Estado: pendiente de archivo PDF.</p>
+    <canvas id="stateCanvas" width="460" height="130"></canvas>
+  </section>
+
+  <section class="card">
+    <div class="row" style="justify-content:space-between">
+      <div class="tabs row">
+        <button id="tResumen" disabled class="active">Resumen y Hechos</button>
+        <button id="tDemandante" disabled>Visión Demandante</button>
+        <button id="tDemandado" disabled>Visión Demandado</button>
+        <button id="tPruebas" disabled>Auditoría de Pruebas</button>
+        <button id="tRiesgo" disabled>Riesgo y Cuantía</button>
+      </div>
+      <small id="metaInfo">Sin documento cargado</small>
+    </div>
+  </section>
+
+  <section id="pResumen" class="card">
+    <h2>1) Resumen Ejecutivo y Cuadro de Hechos</h2>
+    <div class="grid2">
+      <div>
+        <h3>Cronología del siniestro</h3>
+        <ol>
+          <li><strong>T0</strong> - Ocurrencia del accidente e intervención policial.</li>
+          <li><strong>T1</strong> - IPAT, fijación fotográfica y croquis.</li>
+          <li><strong>T2</strong> - Atención médica y consolidación de incapacidad/diagnóstico.</li>
+          <li><strong>T3</strong> - Reclamación y demanda/contestación.</li>
+        </ol>
+      </div>
+      <div>
+        <h3>Sujetos procesales</h3>
+        <ul>
+          <li><strong>Conductor A</strong></li><li><strong>Conductor B</strong></li><li><strong>Propietario</strong></li>
+          <li><strong>Aseguradora</strong></li><li><strong>Víctimas</strong> directas/indirectas</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Tabla dinámica comparativa</h3>
+    <table id="factsTable">
+      <thead><tr><th>Hecho</th><th>Versión Demandante</th><th>Versión Demandado</th><th>Prueba soporte</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Dinámica de impacto</td>
+          <td contenteditable="true">Invadió carril y omitió señal de pare.</td>
+          <td contenteditable="true">La víctima excedía velocidad.</td>
+          <td contenteditable="true">IPAT, video, huellas de frenado</td>
+        </tr>
+        <tr>
+          <td>Nexo causal médico</td>
+          <td contenteditable="true">Lesiones compatibles con cinemática del choque.</td>
+          <td contenteditable="true">Patología preexistente parcial.</td>
+          <td contenteditable="true">Historia clínica, pericia biomecánica</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="row" style="margin-top:8px">
+      <button id="btnAlertas" disabled>Generar Alertas Jurídicas</button>
+    </div>
+    <div id="alertas"></div>
+  </section>
+
+  <section id="pDemandante" class="card hidden">
+    <h2>2) Visión <strong>DEMANDANTE</strong></h2>
+    <ul>
+      <li><strong>Teoría del caso:</strong> régimen por <strong>actividad peligrosa</strong>.</li>
+      <li><strong>Daños:</strong> <strong>daño emergente</strong>, <strong>lucro cesante</strong>, <strong>daño moral</strong>, <strong>vida de relación</strong>.</li>
+      <li><strong>Fortalezas:</strong> IPAT + cadena médica + testigo presencial coherente.</li>
+      <li><strong>Debilidades:</strong> vacíos documentales de ingresos y causalidad diferencial.</li>
+    </ul>
+  </section>
+
+  <section id="pDemandado" class="card hidden">
+    <h2>3) Visión <strong>DEMANDADO</strong></h2>
+    <ul>
+      <li><strong>Eximentes:</strong> culpa exclusiva víctima, hecho de tercero, caso fortuito/fuerza mayor.</li>
+      <li><strong>Contestación:</strong> negar causalidad no probada y precisar hechos de tiempo, modo y lugar.</li>
+      <li><strong>Excepciones:</strong> inexistencia de obligación, legitimación, prescripción (si aplica).</li>
+    </ul>
+  </section>
+
+  <section id="pPruebas" class="card hidden">
+    <h2>4) Auditoría de Pruebas</h2>
+    <table>
+      <thead><tr><th>Prueba</th><th>Valor</th><th>Riesgo</th><th>Acción</th></tr></thead>
+      <tbody>
+        <tr><td>IPAT</td><td>Objetivo</td><td>Errores de diligenciamiento</td><td>Ratificación agente + anexos</td></tr>
+        <tr><td>Testimonios</td><td>Contexto</td><td>Sesgo de percepción</td><td>Contrainterrogatorio focal</td></tr>
+        <tr><td>Peritaje</td><td>Reconstrucción</td><td>Supuestos débiles</td><td>Perito de parte</td></tr>
+        <tr><td>Video</td><td>Muy alto</td><td>Autenticidad</td><td>Cadena custodia + metadatos</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="pRiesgo" class="card hidden">
+    <h2>5) Riesgo y Cuantía</h2>
+    <p>Razonabilidad según soportes, duplicidad de rubros y concurrencia de culpas.</p>
+    <p>Probabilidad de éxito: <strong id="prob">Media</strong>.</p>
+    <input type="range" id="risk" min="1" max="3" value="2" />
+    <p id="riskTxt">Nivel actual: Medio</p>
+  </section>
+</main>
+
+<script>
+  const el = id => document.getElementById(id);
+  const pdfInput = el('pdfInput'), startBtn = el('startBtn'), pdfStatus = el('pdfStatus');
+  const procTag = el('procTag'), metaInfo = el('metaInfo'), btnAlertas = el('btnAlertas');
+  const tabMap = { tResumen:'pResumen', tDemandante:'pDemandante', tDemandado:'pDemandado', tPruebas:'pPruebas', tRiesgo:'pRiesgo' };
+  const tabButtons = Object.keys(tabMap).map(id => el(id));
+
+  function drawState(ready) {
+    const c = el('stateCanvas'), ctx = c.getContext('2d');
+    ctx.clearRect(0,0,c.width,c.height); ctx.fillStyle='#070b16'; ctx.fillRect(0,0,c.width,c.height);
+    ctx.strokeStyle=ready?'#22c55e':'#3b82f6'; ctx.lineWidth=2; ctx.strokeRect(8,8,c.width-16,c.height-16);
+    ctx.fillStyle='#e9edf5'; ctx.font='16px Arial'; ctx.fillText('Lienzo de estado del caso',20,40);
+    ctx.fillStyle=ready?'#86efac':'#fcd34d'; ctx.font='bold 18px Arial';
+    ctx.fillText(ready?'PDF validado y procesado':'Carga PDF obligatoria pendiente',20,82);
+  }
+
+  function isPdf(file) {
+    if (!file) return false;
+    const nameOk = file.name.toLowerCase().endsWith('.pdf');
+    const type = (file.type || '').toLowerCase();
+    const typeOk = type.includes('pdf') || type === 'application/octet-stream' || type === '';
+    return nameOk && typeOk;
+  }
+
+  function activateDashboard(file) {
+    tabButtons.forEach(b => b.disabled = false);
+    btnAlertas.disabled = false;
+    startBtn.disabled = true;
+    procTag.classList.add('on');
+    pdfStatus.style.color = '#86efac';
+    pdfStatus.textContent = `PDF cargado: ${file.name} (${Math.max(1, Math.round(file.size/1024))} KB).`;
+    metaInfo.textContent = `Documento activo: ${file.name}`;
+    drawState(true);
+  }
+
+  pdfInput.addEventListener('change', () => {
+    const file = pdfInput.files && pdfInput.files[0];
+    if (!isPdf(file)) {
+      startBtn.disabled = true;
+      pdfStatus.style.color = '#fca5a5';
+      pdfStatus.textContent = 'Archivo inválido. Cargue un PDF (.pdf) para iniciar.';
+      return;
+    }
+    pdfStatus.style.color = '#fcd34d';
+    pdfStatus.textContent = `PDF detectado: ${file.name}. Pulse "Iniciar procesamiento".`;
+    startBtn.disabled = false;
+  });
+
+  startBtn.addEventListener('click', () => {
+    const file = pdfInput.files && pdfInput.files[0];
+    if (!isPdf(file)) {
+      pdfStatus.style.color = '#fca5a5';
+      pdfStatus.textContent = 'No se puede procesar: falta PDF válido.';
+      return;
+    }
+    activateDashboard(file);
+  });
+
+  tabButtons.forEach(btn => btn.addEventListener('click', () => {
+    Object.entries(tabMap).forEach(([tid,pid]) => {
+      const active = tid === btn.id;
+      el(tid).classList.toggle('active', active);
+      el(pid).classList.toggle('hidden', !active);
+    });
+  }));
+
+  el('btnAlertas').addEventListener('click', () => {
+    const rows = [...document.querySelectorAll('#factsTable tbody tr')];
+    const alerts = [];
+    rows.forEach((r, i) => {
+      const a = r.children[1].innerText.toLowerCase();
+      const d = r.children[2].innerText.toLowerCase();
+      const p = r.children[3].innerText.toLowerCase();
+      if (a.includes('omitió señal de pare') && d.includes('exced')) alerts.push(`Fila ${i+1}: posible **concurrencia de culpas**.`);
+      if (d.includes('preexistente') && !p.includes('pericia')) alerts.push(`Fila ${i+1}: alegación de preexistencia sin soporte pericial robusto.`);
+    });
+    const box = el('alertas'); box.innerHTML = '';
+    if (!alerts.length) {
+      box.innerHTML = '<div class="alert ok">Sin inconsistencias críticas automáticas. Mantenga revisión integral del expediente.</div>';
+      return;
+    }
+    alerts.forEach(t => {
+      const div = document.createElement('div'); div.className = 'alert bad'; div.innerHTML = `<strong>Alerta Jurídica:</strong> ${t}`; box.appendChild(div);
+    });
+  });
+
+  el('risk').addEventListener('input', ev => {
+    const m = {1:['Baja','Bajo'],2:['Media','Medio'],3:['Alta','Alto']};
+    const [p,n] = m[ev.target.value]; el('prob').innerText = p; el('riskTxt').innerText = `Nivel actual: ${n}`;
+  });
+
+  drawState(false);
+</script>
+</body>
+</html>

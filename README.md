@@ -49,3 +49,6 @@ In this exercise, you will:
 ---
 
 &copy; 2025 GitHub &bull; [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/code_of_conduct.md) &bull; [MIT License](https://gh.io/mit)
+## Canvas legal interactivo
+
+Se agregó y corrigió `canvas_dashboard.html`: tablero interactivo de análisis jurídico con validación robusta de PDF (.pdf), botón de inicio de procesamiento, navegación por módulos, tabla dinámica de hechos, alertas jurídicas y estimación de riesgo.
